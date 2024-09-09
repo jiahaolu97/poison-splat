@@ -1,0 +1,9 @@
+# data files
+dataset/**
+!dataset/**/README.md
+# temp files
+*.pyc
+.vscode
+build
+*.egg-info
+__pycache__
