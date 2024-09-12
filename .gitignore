@@ -1,6 +1,9 @@
 # data files
 dataset/**
 !dataset/**/README.md
+# log files
+log/**
+!log/**/.placeholder
 # temp files
 *.pyc
 .vscode
