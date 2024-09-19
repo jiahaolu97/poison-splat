@@ -14,7 +14,7 @@ import shutil
 from random import sample
 from argparse import ArgumentParser
 from utils.loss_utils import l1_loss, ssim, image_total_variation
-from utils.general_utils import safe_state
+from utils.general_utils import safe_state, fix_all_random_seed
 from utils.image_utils import psnr
 from utils.log_utils import gpu_monitor_worker, plot_record, record_decoy_model_stats
 from utils.attack_utils import (set_default_arguments, find_proxy_model, 
@@ -23,6 +23,7 @@ from scene import Scene, GaussianModel
 from scene.gaussian_renderer import render
 
 def poison_splat_unbounded(args):
+    fix_all_random_seed()
     decoy_gaussians = GaussianModel(args.sh_degree)
     proxy_model_path = find_proxy_model(args)
     scene = Scene(args, decoy_gaussians, load_proxy_path=proxy_model_path, shuffle=False)
@@ -55,7 +56,7 @@ def poison_splat_unbounded(args):
     seq_poison_data_tv = []
     for attack_iter in range(1, adv_iters + 1):
         if not viewpoint_seq:
-            viewpoint_seq = sample(range(camera_num), camera_num)                
+            viewpoint_seq = sample(range(camera_num), camera_num)
         viewpoint_cam_id = viewpoint_seq.pop(0)
         viewpoint_cam = adv_viewpoint_stack[viewpoint_cam_id]
         render_pkg = render(viewpoint_cam, decoy_gaussians, args, background)

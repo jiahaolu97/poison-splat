@@ -19,7 +19,7 @@ def set_default_arguments(parser):
                         help='if yes, visualize test set reconstruction')
     parser.add_argument('--init_gaussian_num', type=int, default=10_000,
                         help='for victim algorithm, number of initial gaussians')
-    parser.add_argument('--sh_degree', type=int, default=0,
+    parser.add_argument('--sh_degree', type=int, default=3,
                         help='order of spherical harmonics to be used; if 0, use rgb. Default is 0')
     parser.add_argument('--input_resolution_downscale', type=int, default=-1,
                         help='if set, downscale input images by this factor. default is -1, downscale to 1.6k')
@@ -82,8 +82,15 @@ def set_default_arguments(parser):
 def find_proxy_model(args):
     if args.adv_proxy_model_path is not None:
         return args.adv_proxy_model_path
-    proxy_model_path = args.data_path.replace("dataset/", "log/main/")
-    proxy_model_path += "/victim_model.ply"
+    if 'Nerf_Synthetic' in args.data_path:
+        proxy_model_path = args.data_path.replace("dataset/Nerf_Synthetic/", "log/01_main_exp/victim_gs_nerf_synthetic_clean/")
+    elif 'MIP_Nerf_360' in args.data_path:
+        proxy_model_path = args.data_path.replace("dataset/MIP_Nerf_360/", "log/01_main_exp/victim_gs_mip_nerf_360_clean/")
+    elif 'Tanks_and_Temples' in args.data_path:
+        proxy_model_path = args.data_path.replace("dataset/Tanks_and_Temples", "log/01_main_exp/victim_gs_tanks_and_temples_clean/")
+    else:
+        assert False, f"Dataset not supported: {args.data_path}"
+    proxy_model_path += "exp_run_1/victim_model.ply"
     assert os.path.exists(proxy_model_path), "Please provide proxy model path in [args.adv_proxy_model_path]"
     return proxy_model_path
 
@@ -100,14 +107,12 @@ def build_poisoned_data_folder(args):
     elif 'MIP_Nerf_360' in args.data_path:
         shutil.copy2(args.data_path + 'poses_bounds.npy', args.data_output_path + 'poses_bounds.npy')
         shutil.copytree(args.data_path + 'sparse', args.data_output_path + 'sparse', dirs_exist_ok=True)
-        args.data_output_path += f'{args.images}/'
-        os.makedirs(args.data_output_path, exist_ok = True)
+        os.makedirs(f'{args.data_output_path}/{args.images}/', exist_ok = True)
         args.image_format = 'JPG'
         return f'{args.data_output_path}/{args.images}/'
     elif 'Tanks_and_Temples' in args.data_path:
         shutil.copytree(args.data_path + 'sparse', args.data_output_path + 'sparse', dirs_exist_ok=True)
-        args.data_output_path += f'{args.images}/'
-        os.makedirs(args.data_output_path, exist_ok = True)
+        os.makedirs(f'{args.data_output_path}/{args.images}/', exist_ok = True)
         args.image_format = 'jpg'
         return f'{args.data_output_path}/{args.images}/'
     else:

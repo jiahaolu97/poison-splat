@@ -81,12 +81,16 @@ def record_decoy_model_stats(path):
     max_GPU_mem = max(gpu_mem_cost)
     decoy_render_tv_record = np.load(f'{path}/decoy_render_tv_record.npy')
     poison_data_tv_record = np.load(f'{path}/poison_data_tv_record.npy')
+    max_decoy_tv = max(decoy_render_tv_record) / 1000 / 1000
+    max_poison_data_tv = max(poison_data_tv_record) / 1000 / 1000
 
     result_log = open(f'{path}/decoy_model.log', 'w')
     result_str = ''
     result_str += f"Max Gaussian Number: {max_gaussian_nums:.3f} M\n"
     result_str += f"Max GPU memory: {int(max_GPU_mem)} MB\n"
     result_str += f"Poisoning time: {training_time:.3f} min\n"
+    result_str += f"Max Decoy Render TV: {max_decoy_tv:.5f} M\n"
+    result_str += f"Max Poison Data TV: {max_poison_data_tv:.5f} M\n"
     print(result_str)
     result_log.write(result_str)
     result_log.flush()

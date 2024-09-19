@@ -27,7 +27,6 @@ def PILtoTorch(pil_image, resolution):
         return resized_image.unsqueeze(dim=-1).permute(2, 0, 1)
     
 
-
 def get_expon_lr_func(
     lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000
 ):
@@ -139,3 +138,11 @@ def safe_state(args, silent):
     args.source_path = args.data_path
     args.model_path = args.decoy_log_path
     args.resolution = args.input_resolution_downscale
+
+def fix_all_random_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False

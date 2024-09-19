@@ -91,6 +91,14 @@ def plot_record(file_name, record_name, xlabel='Iteration'):
     plt.savefig(file_name.replace('.npy', '.png'))
     plt.close()
 
+def fix_all_random_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 def get_gaussian_num(gaussians):
     return gaussians._offset.size(0) * gaussians._offset.size(1)
 
@@ -105,6 +113,7 @@ def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving
     gpu_log_file_handle = open(f'{args.model_path}/gpu.log', 'w')
     gpu_monitor_process = multiprocessing.Process(target=gpu_monitor_worker, args=(gpu_monitor_stop_event, gpu_log_file_handle, args.gpu))
     gpu_monitor_process.start()
+    fix_all_random_seed()
     # =================================================================
 
     first_iter = 0
@@ -163,7 +172,7 @@ def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving
             ema_loss_for_log = 0.4 * loss.item() + 0.6 * ema_loss_for_log
 
             if iteration % 10 == 0:
-                print(f"[GPU {args.gpu}]: Iteration {iteration} - Loss {ema_loss_for_log:.3f}")
+                print(f"[GPU {args.gpu}]: Run {exp_run} iteration {iteration} - Loss {ema_loss_for_log:.3f}")
             
             # densification
             if iteration < opt.update_until and iteration > opt.start_stat:
