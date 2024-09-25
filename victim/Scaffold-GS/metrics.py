@@ -94,7 +94,7 @@ def evaluate(model_paths):
             print("Unable to compute metrics for model", scene_dir)
 
 if __name__ == "__main__":
-    device = torch.device("cuda:0")
+    device = torch.device("cuda")
     torch.cuda.set_device(device)
     lpips_fn = lpips.LPIPS(net='vgg').to(device)
 

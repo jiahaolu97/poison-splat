@@ -186,14 +186,14 @@ def victim_training(dataset, opt, pipe, testing_iterations, saving_iterations, c
     plot_record(f'{args.model_path}/exp_run_{exp_run}/iter_elapse_record.npy', 'Iteration Elapse Time [ms]', 'Time')
 
     psnr_record_numpy = np.array(record_psnr)
-    np.save(f'{args.model_path}exp_run_{exp_run}//psnr_record.npy', psnr_record_numpy)
+    np.save(f'{args.model_path}exp_run_{exp_run}/psnr_record.npy', psnr_record_numpy)
     plot_record(f'{args.model_path}/exp_run_{exp_run}/psnr_record.npy', 'PSNR')
     l1_record_numpy = np.array(record_l1)
     np.save(f'{args.model_path}/exp_run_{exp_run}/l1_record.npy', l1_record_numpy)
     plot_record(f'{args.model_path}/exp_run_{exp_run}/l1_record.npy', 'L1 Loss')
     ssim_record_numpy = np.array(record_ssim)
     np.save(f'{args.model_path}/exp_run_{exp_run}/ssim_record.npy', ssim_record_numpy)
-    plot_record(f'{args.model_path}/ssim_record.npy', 'SSIM')
+    plot_record(f'{args.model_path}/exp_run_{exp_run}/ssim_record.npy', 'SSIM')
 
     
     gpu_log = open(f'{args.model_path}/exp_run_{exp_run}/gpu.log', 'r')

@@ -23,10 +23,10 @@ import numpy as np
 import json
 from pathlib import Path
 from plyfile import PlyData, PlyElement
-try:
-    import laspy
-except:
-    print("No laspy")
+# try:
+#     import laspy
+# except:
+#     print("No laspy")
 from utils.sh_utils import SH2RGB
 from scene.gaussian_model import BasicPointCloud
 import cv2
@@ -226,7 +226,7 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
 
         ct = 0
 
-        progress_bar = tqdm(frames, desc="Loading dataset")
+        # progress_bar = tqdm(frames, desc="Loading dataset")
 
         for idx, frame in enumerate(frames):
             cam_name = os.path.join(path, frame["file_path"] + extension)
@@ -236,10 +236,11 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
             c2w = np.array(frame["transform_matrix"])
             
             if idx % 10 == 0:
-                progress_bar.set_postfix({"num": Fore.YELLOW+f"{ct}/{len(frames)}"+Style.RESET_ALL})
-                progress_bar.update(10)
-            if idx == len(frames) - 1:
-                progress_bar.close()
+                # progress_bar.set_postfix({"num": Fore.YELLOW+f"{ct}/{len(frames)}"+Style.RESET_ALL})
+                # progress_bar.update(10)
+                print(f'Loaded {idx} frames...')
+            # if idx == len(frames) - 1:
+            #     progress_bar.close()
             
             ct += 1
             # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
@@ -291,16 +292,17 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
             
             if is_debug and idx > 50:
                 break
+    
     return cam_infos
 
 def readNerfSyntheticInfo(path, white_background, eval, extension=".png", ply_path=None):
     print("Reading Training Transforms")
     train_cam_infos = readCamerasFromTransforms(path, "transforms_train.json", white_background, extension)
-    print("Reading Test Transforms")
-    test_cam_infos = readCamerasFromTransforms(path, "transforms_test.json", white_background, extension)
+    # print("Reading Test Transforms")
+    # test_cam_infos = readCamerasFromTransforms(path, "transforms_test.json", white_background, extension)
     
     if not eval:
-        train_cam_infos.extend(test_cam_infos)
+        # train_cam_infos.extend(test_cam_infos)
         test_cam_infos = []
 
     nerf_normalization = getNerfppNorm(train_cam_infos)
@@ -321,6 +323,7 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png", ply_pa
         pcd = fetchPly(ply_path)
     except:
         pcd = None
+
 
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,

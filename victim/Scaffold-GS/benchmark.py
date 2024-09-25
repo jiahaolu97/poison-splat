@@ -45,9 +45,10 @@ from gpuinfo import GPUInfo
 from datetime import datetime
 import matplotlib.pyplot as plt
 import re
+import random
 
 # torch.set_num_threads(32)
-lpips_fn = lpips.LPIPS(net='vgg').to('cuda')
+#lpips_fn = lpips.LPIPS(net='vgg').to('cuda')
 
 def gpu_monitor_worker(stop_event, log_file_handle, gpuid=0):
     while not stop_event.is_set():
@@ -63,20 +64,6 @@ def gpu_monitor_worker(stop_event, log_file_handle, gpuid=0):
         log_file_handle.flush()
         time.sleep(0.2)
     print(f'GPU {gpuid} monitor stops')
-
-def read_gpumem_from_log(gpulogfile):
-    gpu_log = open(f'{gpulogfile}', 'r')
-    timestamps = []
-    gpu_usage_percentage = []
-    gpu_mem_cost = []
-    for line in gpu_log:
-        # print(line)
-        pattern = r'\[(.*?)\]'
-        matches = re.findall(pattern, line)
-        timestamps.append(matches[0])
-        gpu_usage_percentage.append(int(matches[1]))
-        gpu_mem_cost.append(int(matches[2]))
-    return gpu_usage_percentage, gpu_mem_cost, timestamps
 
 def plot_record(file_name, record_name, xlabel='Iteration'):
     if not os.path.exists(file_name):
@@ -102,7 +89,8 @@ def fix_all_random_seed(seed=42):
 def get_gaussian_num(gaussians):
     return gaussians._offset.size(0) * gaussians._offset.size(1)
 
-def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from, wandb=None, logger=None, ply_path=None):
+def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from, wandb=None, logger=None, ply_path=None, exp_run=1):
+    os.makedirs(f'{args.model_path}/exp_run_{exp_run}/', exist_ok=True)
     # ==============Tools for monitoring victim status==================
     record_gaussian_num = []
     record_iter_elapse = []
@@ -110,7 +98,7 @@ def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving
     record_ssim = []
     record_psnr = []
     gpu_monitor_stop_event = multiprocessing.Event()
-    gpu_log_file_handle = open(f'{args.model_path}/gpu.log', 'w')
+    gpu_log_file_handle = open(f'{args.model_path}/exp_run_{exp_run}/gpu.log', 'w')
     gpu_monitor_process = multiprocessing.Process(target=gpu_monitor_worker, args=(gpu_monitor_stop_event, gpu_log_file_handle, args.gpu))
     gpu_monitor_process.start()
     fix_all_random_seed()
@@ -211,28 +199,28 @@ def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving
     gpu_log_file_handle.flush()
     gpu_log_file_handle.close()
 
-    gaussians.save_ply(f'{args.model_path}/victim_model.ply')
+    gaussians.save_ply(f'{args.model_path}/exp_run_{exp_run}/victim_model.ply')
 
     gaussian_num_record_numpy = np.array(record_gaussian_num)
-    np.save(f'{args.model_path}/gaussian_num_record.npy', gaussian_num_record_numpy)
-    plot_record(f'{args.model_path}/gaussian_num_record.npy', 'Number of Gaussians')
+    np.save(f'{args.model_path}/exp_run_{exp_run}/gaussian_num_record.npy', gaussian_num_record_numpy)
+    plot_record(f'{args.model_path}/exp_run_{exp_run}/gaussian_num_record.npy', 'Number of Gaussians')
 
     iter_elapse_record_numpy = np.array(record_iter_elapse)
-    np.save(f'{args.model_path}/iter_elapse_record.npy', iter_elapse_record_numpy)
-    plot_record(f'{args.model_path}/iter_elapse_record.npy', 'Iteration Elapse Time [ms]', 'Time')
+    np.save(f'{args.model_path}/exp_run_{exp_run}/iter_elapse_record.npy', iter_elapse_record_numpy)
+    plot_record(f'{args.model_path}/exp_run_{exp_run}/iter_elapse_record.npy', 'Iteration Elapse Time [ms]', 'Time')
 
     psnr_record_numpy = np.array(record_psnr)
-    np.save(f'{args.model_path}/psnr_record.npy', psnr_record_numpy)
-    plot_record(f'{args.model_path}/psnr_record.npy', 'PSNR')
+    np.save(f'{args.model_path}/exp_run_{exp_run}/psnr_record.npy', psnr_record_numpy)
+    plot_record(f'{args.model_path}/exp_run_{exp_run}/psnr_record.npy', 'PSNR')
     l1_record_numpy = np.array(record_l1)
-    np.save(f'{args.model_path}/l1_record.npy', l1_record_numpy)
-    plot_record(f'{args.model_path}/l1_record.npy', 'L1 Loss')
+    np.save(f'{args.model_path}/exp_run_{exp_run}/l1_record.npy', l1_record_numpy)
+    plot_record(f'{args.model_path}/exp_run_{exp_run}/l1_record.npy', 'L1 Loss')
     ssim_record_numpy = np.array(record_ssim)
-    np.save(f'{args.model_path}/ssim_record.npy', ssim_record_numpy)
-    plot_record(f'{args.model_path}/ssim_record.npy', 'SSIM')
+    np.save(f'{args.model_path}/exp_run_{exp_run}/ssim_record.npy', ssim_record_numpy)
+    plot_record(f'{args.model_path}/exp_run_{exp_run}/ssim_record.npy', 'SSIM')
 
     
-    gpu_log = open(f'{args.model_path}/gpu.log', 'r')
+    gpu_log = open(f'{args.model_path}/exp_run_{exp_run}/gpu.log', 'r')
     timestamps = []
     gpu_usage_percentage = []
     gpu_mem_cost = []
@@ -248,7 +236,7 @@ def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving
     plt.ylabel('GPU memory cost [MB]')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f'{args.model_path}/gpu_mem_cost.png')
+    plt.savefig(f'{args.model_path}/exp_run_{exp_run}/gpu_mem_cost.png')
     plt.close()
     training_start_timestamp = timestamps[0]
     training_end_timestamp = timestamps[-1]
@@ -258,7 +246,7 @@ def victim_training(dataset, opt, pipe, dataset_name, testing_iterations, saving
     training_time = training_time_diff.seconds / 60
     max_gaussian_nums = max(record_gaussian_num) / 1000 / 1000
     max_GPU_mem = max(gpu_mem_cost)
-    result_log = open(f'{args.model_path}/benchmark_result.log', 'w')
+    result_log = open(f'{args.model_path}/exp_run_{exp_run}/benchmark_result.log', 'w')
     result_str = ''
     result_str += f"Max Gaussian Number: {max_gaussian_nums:.3f} M\n"
     result_str += f"Max GPU mem: {int(max_GPU_mem)} MB\n"
@@ -447,6 +435,53 @@ def get_logger(path):
 
     return logger
 
+def conclude_victim_multiple_runs(args):
+    max_gaussian_nums_runs = []
+    max_gpu_mem_runs = []
+    training_time_runs = []
+    for exp_run in range(1, args.exp_runs + 1):
+        record_gaussian_num = np.load(f'{args.model_path}/exp_run_{exp_run}/gaussian_num_record.npy')
+        gpu_log = open(f'{args.model_path}/exp_run_{exp_run}/gpu.log', 'r')
+        timestamps = []
+        gpu_usage_percentage = []
+        gpu_mem_cost = []
+        for line in gpu_log:
+            pattern = r'\[(.*?)\]'
+            matches = re.findall(pattern, line)
+            timestamps.append(matches[0])
+            gpu_usage_percentage.append(int(matches[1]))
+            gpu_mem_cost.append(int(matches[2]))
+        training_start_timestamp = timestamps[0]
+        training_end_timestamp = timestamps[-1]
+        training_start_time = datetime.strptime(training_start_timestamp, "%Y-%m-%d %H:%M:%S")
+        training_end_time = datetime.strptime(training_end_timestamp, "%Y-%m-%d %H:%M:%S")
+        training_time_diff = training_end_time - training_start_time
+        training_time = training_time_diff.seconds / 60
+        max_gaussian_nums = max(record_gaussian_num) / 1000 / 1000
+        max_GPU_mem = max(gpu_mem_cost)
+
+        max_gaussian_nums_runs.append(max_gaussian_nums)
+        max_gpu_mem_runs.append(max_GPU_mem)
+        training_time_runs.append(training_time)
+    
+    max_gaussian_nums_runs_mean = np.mean(np.array(max_gaussian_nums_runs))
+    max_gaussian_nums_runs_std = np.std(np.array(max_gaussian_nums_runs))
+    max_gpu_mem_runs_mean = np.mean(np.array(max_gpu_mem_runs))
+    max_gpu_mem_runs_std = np.std(np.array(max_gpu_mem_runs))
+    training_time_runs_mean = np.mean(np.array(training_time_runs))
+    training_time_runs_std = np.std(np.array(training_time_runs))
+
+    result_log = open(f'{args.model_path}/benchmark_result.log', 'w')
+    result_str = ''
+    result_str += f"Max Gaussian Number: {max_gaussian_nums_runs_mean:.3f} M +- {max_gaussian_nums_runs_std:.3f} M\n"
+    result_str += f"Max GPU mem: {int(max_gpu_mem_runs_mean)} MB +- {int(max_gpu_mem_runs_std)} MB\n"
+    result_str += f"Training time: {training_time_runs_mean:.2f} min +- {training_time_runs_std} min\n"
+    print(result_str)
+    result_log.write(result_str)
+    result_log.flush()
+    result_log.close()
+
+
 if __name__ == "__main__":
     # Set up command line argument parser
     parser = ArgumentParser(description="Scaffold-GS Victim Benchmark")
@@ -462,11 +497,12 @@ if __name__ == "__main__":
     # parser.add_argument("--test_iterations", nargs="+", type=int, default=[3_000, 7_000, 30_000])
     # parser.add_argument("--save_iterations", nargs="+", type=int, default=[3_000, 7_000, 30_000])
     parser.add_argument("--test_iterations", nargs="+", type=int, default=[30_000])
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[30_000])
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
     parser.add_argument("--gpu", type=int, default = '-1')
+    parser.add_argument("--exp_runs", type=int, default=3)
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
 
@@ -511,14 +547,23 @@ if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
     
     # training
-    victim_training(lp.extract(args), op.extract(args), pp.extract(args), dataset,  args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from, wandb, logger)
+    for exp_run in range(1, args.exp_runs + 1):
+        victim_training(lp.extract(args), op.extract(args), pp.extract(args), dataset,  
+        args.test_iterations, args.save_iterations, args.checkpoint_iterations, 
+        args.start_checkpoint, args.debug_from, wandb, logger, exp_run=exp_run)
     if args.warmup:
         logger.info("\n Warmup finished! Reboot from last checkpoints")
         new_ply_path = os.path.join(args.model_path, f'point_cloud/iteration_{args.iterations}', 'point_cloud.ply')
-        victim_training(lp.extract(args), op.extract(args), pp.extract(args), dataset,  args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from, wandb=wandb, logger=logger, ply_path=new_ply_path)
+        for exp_run in range(1, args.exp_runs + 1):
+            victim_training(lp.extract(args), op.extract(args), pp.extract(args), dataset,  
+            args.test_iterations, args.save_iterations, args.checkpoint_iterations, 
+            args.start_checkpoint, args.debug_from, wandb=wandb, logger=logger, 
+            ply_path=new_ply_path, exp_run=exp_run)
 
     # All done
     logger.info("\nTraining complete.")
+
+    conclude_victim_multiple_runs(args)
 
     # # rendering
     # logger.info(f'\nStarting Rendering~')
