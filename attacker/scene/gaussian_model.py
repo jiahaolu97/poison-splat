@@ -266,9 +266,9 @@ class GaussianModel:
         gn = self.get_gaussian_num
         gn_str = str(gn)
         if gn > 1000:
-            gn_str = f"{gn/1000} K"
+            gn_str = f"{round(gn/1000, 3)} K"
         if gn > 1e6:
-            gn_str = f"{gn/1e6} M"
+            gn_str = f"{round(gn/1e6, 3)} M"
         return (f"GN={gn_str}")
 
     def replace_tensor_to_optimizer(self, tensor, name):
