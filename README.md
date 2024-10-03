@@ -1,7 +1,7 @@
 <div align="center">
-<img src="assets/logo.png" width="70%"></img>
+<img src="assets/logo.png" width="50%"></img>
 <h3></h3>
-<h1>Computation Cost Attack on 3D Gaussian Splatting</h1>
+<h2>Computation Cost Attack on 3D Gaussian Splatting</h2>
 <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-4E94CE.svg"></a>
 <a href="" target="_blank"><img src="https://img.shields.io/badge/arXiv-2301.12900-009688.svg" alt="arXiv"></a>
 </div>
