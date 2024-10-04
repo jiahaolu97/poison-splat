@@ -44,9 +44,9 @@ The key observation behind this new attack surface lies in the inherent flexibil
 Unlike NeRF or any other neural-network-driven machine learning systems which has pre-fixed and consistent computation cost (Fig. a), 3DGS has **adaptively flexible computation complexity**(i.e, number of parameters, training time cost and GPU memory consumption) **depending on the content of input** (Fig. b).  This flexibility leaves backdoor to computation cost attacks (Fig. c).
 
 We model attack via max-min bi-level optimization problem:
-$$
+```math
 \mathcal{D}_p  =  \mathop{\arg\max}\limits_{\mathcal{D}_p} \mathcal{C}(\mathcal{G}^*), ~~ \text{s.t.\quad } \mathcal{G}^* = \mathop{\arg\min}\limits_{\mathcal{G}} \mathcal{L}(\mathcal{D}_p),
-$$
+```
 
 Where inner loop is the victim goal: minimize reconstruction error $\mathcal{L}(\mathcal{D}_p)$ during 3DGS training, and the outer loop is the attacker goal: making a poisoned dataset $\mathcal{D}_p$ to maximize victim's computation cost $\mathcal{C}(\mathcal{G}^*)$ spent on 3DGS training.
 
