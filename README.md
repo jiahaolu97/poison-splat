@@ -95,9 +95,8 @@ Instructions of how to download `NeRF-Synthetic`, `MIP-NeRF360` and `Tanks-and-T
 
 For poisoned datasets, you can run poison-splat to make a poisoned dataset following the [data poisoning scripts](#create-poisoned-datasets-and-benchmark-corresponding-computation-cost) or alternatively, downloading our poisoned datasets:
 
-Google Drive:
+Google Drive: https://drive.google.com/file/d/11EZwsxRxWEAOnOThoOEJVre77Q5_SQfx/view?usp=sharing
 
-阿里云盘: 
 
 
 ### Verify Installation
