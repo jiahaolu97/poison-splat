@@ -9,8 +9,8 @@ Jiahao Lu, [Yifan Zhang](https://sites.google.com/view/yifan-zhang), [Qiuhong Sh
 [Skywork AI](http://www1.kunlun.com/research/en/), [National University of Singapore](https://nus.edu.sg)
 <!-- <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-4E94CE.svg"></a>
 <a href="" target="_blank"><img src="https://img.shields.io/badge/arXiv-2301.12900-009688.svg" alt="arXiv"></a> -->
+:bookmark:[[Arxiv]](https://arxiv.org/pdf/2410.08190)
 <h1></h1>
-
 </div>
 
 <p align="center">
