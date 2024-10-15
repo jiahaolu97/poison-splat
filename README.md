@@ -177,7 +177,7 @@ If you consider this repostory useful for your research, please consider citing:
 @article{lu2024poisonsplat,
   title={Poison-splat: Computation Cost Attack on 3D Gaussian Splatting},
   author={Lu, Jiahao and Zhang, Yifan and Shen, Qiuhong and Wang, Xinchao and Yan, Shuicheng},
-  journal={arxiv},
+  journal={arXiv preprint arXiv:2410.08190},
   year={2024}
 }
 ```
