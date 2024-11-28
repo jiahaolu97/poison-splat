@@ -1,0 +1,16 @@
+plyfile
+tqdm
+matplotlib
+gpuinfo
+lpips
+einops
+colorama
+torch_scatter
+jaxtyping
+opencv-python
+
+###### local libraries ######
+victim/gaussian-splatting/submodules/diff-gaussian-rasterization
+victim/gaussian-splatting/submodules/simple-knn
+victim/Scaffold-GS/submodules/diff-gaussian-rasterization_scaffold
+victim/mip-splatting/submodules/diff-gaussian-rasterization_mip
