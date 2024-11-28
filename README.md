@@ -6,11 +6,11 @@
 Jiahao Lu, [Yifan Zhang](https://sites.google.com/view/yifan-zhang), [Qiuhong Shen](https://florinshen.github.io/), [Xinchao Wang](https://scholar.google.com/citations?user=w69Buq0AAAAJ&hl=en&oi=ao), [Shuicheng Yan](https://scholar.google.com/citations?user=DNuiPHwAAAAJ&hl=en&oi=ao)
 
 
-[Skywork AI 2050 Research](http://www1.kunlun.com/research/en/), [National University of Singapore](https://nus.edu.sg)
+[Skywork AI](http://www1.kunlun.com/research/en/), [National University of Singapore](https://nus.edu.sg)
 <!-- <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-4E94CE.svg"></a>
 <a href="" target="_blank"><img src="https://img.shields.io/badge/arXiv-2301.12900-009688.svg" alt="arXiv"></a> -->
+:bookmark:[[Arxiv]](https://arxiv.org/pdf/2410.08190)
 <h1></h1>
-
 </div>
 
 <p align="center">
@@ -177,7 +177,7 @@ If you consider this repostory useful for your research, please consider citing:
 @article{lu2024poisonsplat,
   title={Poison-splat: Computation Cost Attack on 3D Gaussian Splatting},
   author={Lu, Jiahao and Zhang, Yifan and Shen, Qiuhong and Wang, Xinchao and Yan, Shuicheng},
-  journal={},
+  journal={arXiv preprint arXiv:2410.08190},
   year={2024}
 }
 ```
