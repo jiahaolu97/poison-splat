@@ -174,6 +174,17 @@ def victim_limiting_gaussian_defense(dataset, opt, pipe, testing_iterations, sav
             record_ssim.append(Lssim.item())
             # ==========================================================================
 
+    SSIM_views = []
+    PSNR_views = []
+    viewpoint_stack = scene.getTrainCameras().copy()
+    for camid, cam in enumerate(viewpoint_stack):
+        gt_image = cam.original_image.cuda()
+        render_image = render(cam, gaussians, pipe, bg)["render"]
+        SSIM_views.append(ssim(render_image, gt_image).item())
+        PSNR_views.append(psnr(render_image, gt_image).mean().item())
+    mean_SSIM = round(sum(SSIM_views)/len(SSIM_views), 4)
+    mean_PSNR = round(sum(PSNR_views)/len(PSNR_views), 4)
+
     # ==================== Write Victim Records ==============================
     gpu_monitor_stop_event.set()
     gpu_monitor_process.join()
@@ -232,6 +243,8 @@ def victim_limiting_gaussian_defense(dataset, opt, pipe, testing_iterations, sav
     result_str += f"Max Gaussian Number: {max_gaussian_nums:.3f} M\n"
     result_str += f"Max GPU mem: {int(max_GPU_mem)} MB\n"
     result_str += f"Training time: {training_time:.3f} min\n"
+    result_str += f"reconstruction SSIM: {mean_SSIM:.4f}\n"
+    result_str += f"reconstruction PSNR: {mean_PSNR:.4f}\n"
     print(result_str)
     result_log.write(result_str)
     result_log.flush()

@@ -15,6 +15,8 @@ from random import randint
 import uuid
 import time
 import re
+import shutil
+import json
 from gaussian_renderer import render
 from scene import Scene, GaussianModel
 from utils.general_utils import safe_state
@@ -56,13 +58,43 @@ def plot_record(file_name, record_name, xlabel='Iteration'):
     plt.savefig(file_name.replace('.npy', '.png'))
     plt.close()
 
-def fix_all_random_seed(seed=42):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+def create_poison_ratio_mix_dataset(args, exp_run):
+    assert args.poison_ratio < 1 and args.poison_ratio > 0
+    orig_source_path = args.source_path
+    poison_ratio_round = round(args.poison_ratio * 100)
+    scene = os.path.basename(os.path.normpath(args.source_path))
+    dataset = os.path.dirname(os.path.normpath(args.source_path))
+    mix_source_path = f'{dataset}_mix/poison_ratio_{poison_ratio_round}/{scene}/'
+    args.model_path = mix_source_path.replace(f'dataset', 'log/08_rbt_poison_ratio')
+    mix_source_path = f'{mix_source_path}exp_run_{exp_run}/'
+    os.makedirs(mix_source_path, exist_ok=True)
+    if 'Nerf_Synthetic' in args.source_path:   # Nerf Synthetic
+        clean_source_path = f'dataset/Nerf_Synthetic/{scene}/'
+        shutil.copy2(f'{args.source_path}/transforms_train.json', f'{mix_source_path}transforms_train.json')
+        shutil.copy2(f'{args.source_path}/points3d.ply', f'{mix_source_path}points3d.ply')
+        # sample random image ID to poison
+        cam_json = json.load(open(f'{clean_source_path}/transforms_train.json'))
+        clean_cams = cam_json["frames"]
+        poison_num = round(args.poison_ratio * len(clean_cams))
+
+        poison_cam_id = np.random.choice(np.arange(len(clean_cams)), size=poison_num, replace=False)
+        clean_cam_id = np.setdiff1d(np.arange(len(clean_cams)), poison_cam_id)
+
+        for cam_id, cam in enumerate(clean_cams):
+            if cam_id in clean_cam_id:
+                new_file_path = cam["file_path"].replace('.', clean_source_path)
+            else:
+                new_file_path = cam["file_path"].replace('.', args.source_path)
+            clean_cams[cam_id]["file_path"] = new_file_path
+        
+        cam_json["frames"] = clean_cams
+        with open(f'{mix_source_path}/transforms_train.json', 'w', encoding='utf-8') as f:
+            json.dump(cam_json, f, indent=4)
+        args.source_path = mix_source_path
+    else:   # MIP_Nerf_360
+        # put into scene/__init__.py
+        pass
+    return orig_source_path
 
 def victim_training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from, exp_run):
     os.makedirs(f'{args.model_path}/exp_run_{exp_run}/', exist_ok=True)
@@ -75,12 +107,12 @@ def victim_training(dataset, opt, pipe, testing_iterations, saving_iterations, c
     gpu_monitor_stop_event = multiprocessing.Event()
     gpu_log_file_handle = open(f'{args.model_path}/exp_run_{exp_run}/gpu.log', 'w')
     gpu_monitor_process = multiprocessing.Process(target=gpu_monitor_worker, args=(gpu_monitor_stop_event, gpu_log_file_handle, args.gpu))
-    fix_all_random_seed()
+    
     # =================================================================
     
     first_iter = 0
     gaussians = GaussianModel(dataset.sh_degree)
-    scene = Scene(dataset, gaussians, shuffle=False) # set `shuffle=False` to fix randomness
+    scene = Scene(dataset, gaussians, shuffle=False, exp_run=exp_run) # set `shuffle=False` to fix randomness
     gaussians.training_setup(opt)
     if checkpoint:
         (model_params, first_iter) = torch.load(checkpoint)
@@ -175,17 +207,6 @@ def victim_training(dataset, opt, pipe, testing_iterations, saving_iterations, c
     gpu_log_file_handle.flush()
     gpu_log_file_handle.close()
 
-    SSIM_views = []
-    PSNR_views = []
-    viewpoint_stack = scene.getTrainCameras().copy()
-    for camid, cam in enumerate(viewpoint_stack):
-        gt_image = cam.original_image.cuda()
-        render_image = render(cam, gaussians, pipe, bg)['render']
-        SSIM_views.append(ssim(gt_image, render_image).item())
-        PSNR_views.append(psnr(gt_image, render_image).mean().item())
-    mean_SSIM = round(sum(SSIM_views) / len(SSIM_views), 4)
-    mean_PSNR = round(sum(PSNR_views) / len(PSNR_views), 4)
-
     gaussians.save_ply(f'{args.model_path}/exp_run_{exp_run}/victim_model.ply')
 
     gaussian_num_record_numpy = np.array(record_gaussian_num)
@@ -206,7 +227,6 @@ def victim_training(dataset, opt, pipe, testing_iterations, saving_iterations, c
     np.save(f'{args.model_path}/exp_run_{exp_run}/ssim_record.npy', ssim_record_numpy)
     plot_record(f'{args.model_path}/exp_run_{exp_run}/ssim_record.npy', 'SSIM')
 
-    
     gpu_log = open(f'{args.model_path}/exp_run_{exp_run}/gpu.log', 'r')
     timestamps = []
     gpu_usage_percentage = []
@@ -238,8 +258,6 @@ def victim_training(dataset, opt, pipe, testing_iterations, saving_iterations, c
     result_str += f"Max Gaussian Number: {max_gaussian_nums:.3f} M\n"
     result_str += f"Max GPU mem: {int(max_GPU_mem)} MB\n"
     result_str += f"Training time: {training_time:.3f} min\n"
-    result_str += f"SSIM: {mean_SSIM:.3f} \n"
-    result_str += f"PSNR: {mean_PSNR:.3f} \n"
     print(result_str)
     result_log.write(result_str)
     result_log.flush()
@@ -310,17 +328,19 @@ if __name__ == "__main__":
     parser.add_argument("--start_checkpoint", type=str, default = None)
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--exp_runs", type=int, default=3)
+    #parser.add_argument("--poison_ratio", type=float, default=0.0)
+    #parser.add_argument("--clean_data_path", type=str, default=None)
     args = parser.parse_args(sys.argv[1:])
-    args.save_iterations.append(args.iterations)
-    print("Optimizing " + args.model_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-    os.makedirs(args.model_path, exist_ok=True)
     # Initialize system state (RNG)
     safe_state(args.quiet)
-
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
+
+    
     for exp_run in range(1, args.exp_runs + 1):
+        orig_source_path = create_poison_ratio_mix_dataset(args, exp_run)
         victim_training(lp.extract(args), op.extract(args), pp.extract(args), args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from, exp_run)
+        args.source_path = orig_source_path
 
     # All done
     print("\nTraining complete.")
@@ -328,4 +348,4 @@ if __name__ == "__main__":
     conclude_victim_multiple_runs(args)
 
     ## usage:
-    # python benchmark.py -s [data path] -m [output path] --gpu [x]
+    # python victim/gaussian-splatting/benchmark_poison_ratio.py --gpu 0  -s dataset/Nerf_Synthetic_unbounded/chair/  --poison_ratio 0.6

@@ -12,6 +12,7 @@
 import os
 import random
 import json
+import numpy as np
 from utils.system_utils import searchForMaxIteration
 from scene.dataset_readers import sceneLoadTypeCallbacks
 from scene.gaussian_model import GaussianModel
@@ -22,7 +23,7 @@ class Scene:
 
     gaussians : GaussianModel
 
-    def __init__(self, args : ModelParams, gaussians : GaussianModel, load_iteration=None, shuffle=True, resolution_scales=[1.0]):
+    def __init__(self, args : ModelParams, gaussians : GaussianModel, load_iteration=None, shuffle=True, resolution_scales=[1.0], exp_run=1):
         """
         :param path: Path to colmap scene main folder.
         """
@@ -41,10 +42,36 @@ class Scene:
         self.test_cameras = {}
 
         if os.path.exists(os.path.join(args.source_path, "sparse")):
-            scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval)
+            if args.poison_ratio > 0.0:
+                poison_ratio_round = round(args.poison_ratio * 100)
+                scene = os.path.basename(os.path.normpath(args.source_path))
+                poison_dataset = os.path.dirname(os.path.normpath(args.source_path))
+                ref_folder = f"dataset/MIP_Nerf_360/{scene}/images/"
+                
+                image_folder = f"{args.source_path}/images/"
+                camera_num = len([file for file in os.listdir(image_folder) if file.lower().endswith(".jpg")])
+                poison_num = round(args.poison_ratio * camera_num)
+                clean_num = camera_num - poison_num
+                ref_indices = np.random.choice(np.arange(camera_num), size=clean_num, replace=False)
+                clean_indices = ref_indices
+                poison_indices = np.setdiff1d(np.arange(camera_num), clean_indices)
+                # record the mix poison data id
+                mix_source_path = f'{poison_dataset}_mix/poison_ratio_{poison_ratio_round}/{scene}/exp_run_{exp_run}/'
+                poison_cam_log = open(f'{mix_source_path}poison_cam.txt', 'w')
+                poison_cam_log.write(f'poison_indices:\n{poison_indices}:\n\n')
+                poison_cam_log.write(f'clean_indices:\n{clean_indices}:\n')
+                poison_cam_log.close()
+            else:
+                ref_folder = None
+                ref_indices = None
+            scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval, ref_path=ref_folder, ref_indices=ref_indices)
         elif os.path.exists(os.path.join(args.source_path, "transforms_train.json")):
             print("Found transforms_train.json file, assuming Blender data set!")
-            scene_info = sceneLoadTypeCallbacks["Blender"](args.source_path, args.white_background, args.eval)
+            if args.poison_ratio > 0.0:
+                poison_mix = True
+            else:
+                poison_mix = False
+            scene_info = sceneLoadTypeCallbacks["Blender"](args.source_path, args.white_background, args.eval, poison_mix=poison_mix)
         else:
             assert False, "Could not recognize scene type!"
 
