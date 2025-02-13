@@ -7,9 +7,12 @@ Jiahao Lu, [Yifan Zhang](https://sites.google.com/view/yifan-zhang), [Qiuhong Sh
 
 
 [Skywork AI](http://www1.kunlun.com/research/en/), [National University of Singapore](https://nus.edu.sg)
+
+**ICLR 2025 spotlight** paper (top 5.1%)
+
 <!-- <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-4E94CE.svg"></a>
 <a href="" target="_blank"><img src="https://img.shields.io/badge/arXiv-2301.12900-009688.svg" alt="arXiv"></a> -->
-:bookmark:[[Arxiv]](https://arxiv.org/pdf/2410.08190)
+:bookmark:[[Arxiv]](https://arxiv.org/pdf/2410.08190)   :open_book:[[OpenReview]](https://openreview.net/forum?id=ExrEw8cVlU)
 <h1></h1>
 </div>
 
@@ -172,12 +175,14 @@ dataset setting | Attacker Poisoned Image | Victim Reconstructed Image | PSNR |
 | MIP-bonsai-Unconstrained | <img src="assets/MIP-bonsai-uncon-attacker.png" width="444" /> | <img src="assets/MIP-bonsai-uncon-victim.png" width="400" /> | 23.66 dB |
 
 ## Citation
-If you consider this repostory useful for your research, please consider citing:
+If you find our paper or this repo useful for your research, please consider citing:
 ```
-@article{lu2024poisonsplat,
-  title={Poison-splat: Computation Cost Attack on 3D Gaussian Splatting},
-  author={Lu, Jiahao and Zhang, Yifan and Shen, Qiuhong and Wang, Xinchao and Yan, Shuicheng},
-  journal={arXiv preprint arXiv:2410.08190},
-  year={2024}
+@inproceedings{
+    lu2025poisonsplat,
+    title={Poison-splat: Computation Cost Attack on 3D Gaussian Splatting},
+    author={Jiahao Lu and Yifan Zhang and Qiuhong Shen and Xinchao Wang and Shuicheng YAN},
+    booktitle={The Thirteenth International Conference on Learning Representations},
+    year={2025},
+    url={https://openreview.net/forum?id=ExrEw8cVlU}
 }
 ```
